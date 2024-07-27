@@ -2,7 +2,7 @@
 
 import db from "@/db/db";
 import fs from "fs/promises"
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 const fileSchema = z.instanceof(File, {message: "File is required"});
@@ -45,6 +45,50 @@ export async function addProduct(prevState : unknown, formData: FormData) {
     
 }
 
+const editSchema = addSchema.extend({
+    file: fileSchema.optional(),
+    image: imageSchema.optional()
+})
+
+export async function updateProduct(id: string, prevState : unknown, formData: FormData) {
+    const result = editSchema.safeParse(Object.fromEntries(formData.entries()));
+    if (!result.success) {
+        return result.error.formErrors.fieldErrors;
+    }
+    const data = result.data;
+    const product = await db.product.findUnique({where: {id}});
+    if (!product) {
+        return notFound();
+    }
+
+    let filePath = product.filePath;
+    if (data.file != null && data.file.size > 0) {
+        await fs.unlink(filePath);
+        filePath = `products/${crypto.randomUUID()}-${data.file.name}`;
+        await fs.writeFile(filePath, Buffer.from(await data.file.arrayBuffer()));
+    }
+
+    let imagePath = product.imagePath;
+    if (data.image != null && data.image.size > 0) {
+        await fs.unlink(`public${imagePath}`);
+        imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`;
+        await fs.writeFile(`public${imagePath}`, Buffer.from(await data.image.arrayBuffer()));
+    }
+    
+    await db.product.update({
+        where: {id},
+        data: {
+            name: data.name,
+            description: data.description,
+            priceInPaise: data.priceInPaise,
+            filePath,
+            imagePath
+        }
+    })
+    redirect("/admin/products");
+    
+}
+
 export async function toggleProductAvailability(id: string, isAvailable: boolean) {
     await db.product.update({
         where: {id},
@@ -57,4 +101,6 @@ export async function deleteProduct(id: string) {
     if (!data) {
         throw new Error("Product not found");
     }
+    await fs.unlink(data.filePath);
+    await fs.unlink(`public${data.imagePath}`);
 }
