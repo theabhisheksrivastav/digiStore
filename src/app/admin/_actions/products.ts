@@ -44,3 +44,17 @@ export async function addProduct(prevState : unknown, formData: FormData) {
     redirect("/admin/products");
     
 }
+
+export async function toggleProductAvailability(id: string, isAvailable: boolean) {
+    await db.product.update({
+        where: {id},
+        data: {isAvailable}
+    });
+}
+
+export async function deleteProduct(id: string) {
+    const data = await db.product.delete({where: {id}});
+    if (!data) {
+        throw new Error("Product not found");
+    }
+}
