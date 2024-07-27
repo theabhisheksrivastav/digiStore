@@ -82,7 +82,7 @@ async function ProductTable() {
                                 </DropdownMenuItem>
                                 <ActiveToggleDropdownItem id={product.id} isAvailable={product.isAvailable} />
                                 <DropdownMenuSeparator />
-                                <DeleteDropdownMenuItem id={product.id} disabled={product._count.orders > 0} />
+                                <DeleteDropdownMenuItem id={product.id} disabled={product._count.orders > 0}  />
                             </DropdownMenuContent>
                         </DropdownMenu>
 
