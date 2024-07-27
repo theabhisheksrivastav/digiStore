@@ -42,13 +42,25 @@ async function ProductTable() {
             </TableRow>
         </TableHeader>
         <TableBody>
-            products.map(product => (
+            {products.map(product => (
                 <TableRow key={product.id}>
                     <TableCell>
                         {product.isAvailable ? "✅" : "❌"}
                     </TableCell>
+                    <TableCell>
+                        {product.name}
+                    </TableCell>
+                    <TableCell>
+                        {product.priceInPaise}
+                    </TableCell>
+                    <TableCell>
+                        {product._count.orders}
+                    </TableCell>
+                    <TableCell>
+                        <Link href={`/admin/products/${product.id}`}>Edit</Link>
+                    </TableCell>
                 </TableRow>
-            ))
+            ))}
         </TableBody>
     </Table>
 }

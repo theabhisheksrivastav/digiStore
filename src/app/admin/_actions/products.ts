@@ -6,14 +6,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 const fileSchema = z.instanceof(File, {message: "File is required"});
-const imageSchema = fileSchema.refine((file: File) => file.type.startsWith("image/"), {message: "File should be an image"});
+const imageSchema = fileSchema.refine((file: File) => file.size === 0 || file.type.startsWith("image/"));
 
 const addSchema = z.object({
     name: z.string().min(3).max(255),
     description: z.string().min(3).max(255),
     priceInPaise: z.coerce.number().int().min(3).positive(),
-    file: fileSchema.refine((file: File) => file.size < 1024 * 1024 * 5 && file.size > 0, {message: "File size should be less than 5MB and required"}),
-    image: imageSchema.refine((file: File) => file.size < 1024 * 1024 * 5 && file.size > 0, {message: "Image size should be less than 5MB and required"}),
+    file: fileSchema.refine((file: File) => file.size > 0, {message: "File is required"}),
+    image: imageSchema.refine((file: File) => file.size > 0, {message: "File is required"}),
 })
 
 export async function addProduct(prevState : unknown, formData: FormData) {
@@ -31,7 +31,7 @@ export async function addProduct(prevState : unknown, formData: FormData) {
     const imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`;
     await fs.writeFile(`public${imagePath}`, Buffer.from(await data.image.arrayBuffer()));
 
-    db.product.create({
+    await db.product.create({
         data: {
             isAvailable: false,
             name: data.name,
