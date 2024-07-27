@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "../_components/PageHeader";
 import Link from 'next/link';
-import { Table, TableHead, TableHeader, TableRow, TableBody } from "@/components/ui/table";
+import { Table, TableHead, TableHeader, TableRow, TableBody, TableCell } from "@/components/ui/table";
+import db from "@/db/db";
 
 export default function AdminProductsPage() {
     return (
@@ -12,11 +13,20 @@ export default function AdminProductsPage() {
                     <Link href="/admin/products/new">Add New Product</Link>
                 </Button>
             </div>
+            <ProductTable />
         </>
     );
 }
 
-function ProductTable() {
+async function ProductTable() {
+    const products = await db.product.findMany({select: {id: true, name: true, priceInPaise: true, isAvailable: true, _count: {select: {orders: true}}},
+    orderBy: {name: 'asc'}});
+
+    
+    if(products.length === 0) {
+        return <div>No products found</div>
+    }
+
     return <Table>
         <TableHeader>
             <TableRow>
@@ -32,7 +42,13 @@ function ProductTable() {
             </TableRow>
         </TableHeader>
         <TableBody>
-            
+            products.map(product => (
+                <TableRow key={product.id}>
+                    <TableCell>
+                        {product.isAvailable ? "✅" : "❌"}
+                    </TableCell>
+                </TableRow>
+            ))
         </TableBody>
     </Table>
 }
