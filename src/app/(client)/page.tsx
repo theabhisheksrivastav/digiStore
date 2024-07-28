@@ -5,16 +5,17 @@ import Link from "next/link"
 import {ArrowRight} from "lucide-react"
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard"
 import { Suspense } from "react"
+import { cache } from "@/lib/cache"
 
 
-function getMostPopularProducts() {
+const getMostPopularProducts = cache(() => {
     return db.product.findMany({where: {isAvailable: true}, orderBy:{ orders:{_count: 'desc'}}, take: 6})
 
-}
+}, ["/", "most-popular-products"], {revalidate: 60 * 60 * 24})
 
-function getNewestProducts() {
+const getNewestProducts = cache(() => {
     return db.product.findMany({where: {isAvailable: true}, orderBy: {createdAt: 'desc'}, take: 6})
-}
+}, ["/", "newest-products"], {revalidate: 60 * 60 * 24})
 
 export default function HomePage() {
     return (
